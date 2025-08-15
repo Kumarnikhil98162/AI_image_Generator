@@ -33,16 +33,17 @@ app.get("/", (req, res) => {
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URL);
-        console.log("✅ Connected to MongoDB");
-
+    console.log("✅ Connected to MongoDB");
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error.message);
-    process.exit(1); // Exit with failure
+    process.exit(1);
   }
 };
 
-// Start server
-app.listen(8080, async () => {
+// Use dynamic port for Render
+const PORT = process.env.PORT || 8080;
+
+app.listen(PORT, async () => {
   await connectDB();
-  console.log("🚀 Server started on http://localhost:8080");
+  console.log(`🚀 Server started on port ${PORT}`);
 });
