@@ -1,28 +1,37 @@
 import axios from "axios";
+import FormData from "form-data";
 
 export const generateImage = async (req, res, next) => {
   try {
     const { prompt } = req.body;
-    const response = await axios.post(
-      "https://api.openai.com/v1/images/generations",
-      {
-        model: "dall-e-3",
-        prompt: prompt,
-        size: "1024x1024",
-        response_format: "b64_json",
-      },
+    console.log("📝 Prompt received:", prompt);
+
+    const formdata = new FormData();
+    formdata.append("prompt", prompt);
+
+    const { data } = await axios.post(
+      "https://clipdrop-api.co/text-to-image/v1",
+      formdata,
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
+          ...formdata.getHeaders(),
+          "x-api-key": process.env.CLIPDROP_API_KEY, 
         },
+        responseType: "arraybuffer",
       }
     );
 
-    const image = `data:image/png;base64,${response.data.data[0].b64_json}`;
-    res.status(200).json({ photo: image });
+    // Convert ArrayBuffer to Base64
+    const base64Image = Buffer.from(data, "binary").toString("base64");
+    const resultImage = `data:image/png;base64,${base64Image}`;
+
+    res.status(200).json({ photo: resultImage });
   } catch (error) {
-    console.error("❌ OpenAI Error:", error);
+    console.error("❌ Clipdrop Error:", error.message);
+    if (error.response) {
+      console.error("🔍 Status:", error.response.status);
+      console.error("📦 Data:", error.response.data.toString());
+    }
     res.status(500).json({ success: false, message: "Image generation failed" });
   }
 };
