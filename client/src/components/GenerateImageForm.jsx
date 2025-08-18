@@ -49,21 +49,16 @@ const Actions = styled.div`
   gap: 8px;
 `;
 
-const GenerateImageForm = ({ post, setPost, createPostLoading, setGenerateImageLoding, generateImageLoading, setcreatePostLoading }) => {
-  const navigate = useNavigate();
-  const [error, seterror] = useState("");
-
-  const generateImageFun = async () => {
-    setGenerateImageLoding(true);
-    await GenerateAIImage({ prompt: post.prompt })
-      .then((res) => {
-        setPost({ ...post, photo: res?.data?.photo });
-        setGenerateImageLoding(false);
-      })
-      .catch((error) => {
-        seterror(error?.response?.data?.message || "Image generation failed");
-        setGenerateImageLoding(false);
-      });
+const generateImageFun = async () => {
+    try {
+      setGenerateImageLoding(true);
+      const res = await GenerateAIImage({ prompt: post.prompt });
+      setPost(prev => ({ ...prev, photo: res?.data?.photo || "" }));
+    } catch (err) {
+      seterror(err?.response?.data?.message || "Image generation failed");
+    } finally {
+      setGenerateImageLoding(false);
+    }
   };
 
   const createPostFun = async () => {
