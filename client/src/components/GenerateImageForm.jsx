@@ -60,18 +60,18 @@ const generateImageFun = async () => {
       setGenerateImageLoding(false);
     }
   };
- const createPostFun = () => {
-  setcreatePostLoading(true);
-  CreatePost(post)
-    .then(() => {
-      setcreatePostLoading(false);
-      navigate("/");
-    })
-    .catch((error) => {
-      seterror(error?.response?.data?.message || "Post creation failed");
-      setcreatePostLoading(false);
-    });
-};
+const createPostFun = async () => {
+    setcreatePostLoading(true);
+    await CreatePost(post)
+      .then(() => {
+        setcreatePostLoading(false);
+        navigate("/");
+      })
+      .catch((error) => {
+        seterror(error?.response?.data?.message || "Post creation failed");
+        setcreatePostLoading(false);
+      });
+  };
 
   return (
     <Form>
