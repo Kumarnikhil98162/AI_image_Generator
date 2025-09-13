@@ -1,11 +1,11 @@
 // client/components/GenerateImageForm.jsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from 'styled-components';
-import Button from './button';
-import TextInput from './TextInput';
-import { AutoAwesome, CreateRounded } from '@mui/icons-material';
-import { CreatePost, GenerateAIImage } from '../api';
+import styled from "styled-components";
+import Button from "./button";
+import TextInput from "./TextInput";
+import { AutoAwesome, CreateRounded } from "@mui/icons-material";
+import { CreatePost, GenerateAIImage } from "../api";
 
 const Form = styled.div`
   flex: 1;
@@ -49,29 +49,38 @@ const Actions = styled.div`
   gap: 8px;
 `;
 
-const generateImageFun = async () => {
+const GenerateImageForm = () => {
+  const navigate = useNavigate();
+
+  // ✅ state variables
+  const [post, setPost] = useState({ name: "", prompt: "", photo: "" });
+  const [error, seterror] = useState("");
+  const [generateImageLoading, setGenerateImageLoding] = useState(false);
+  const [createPostLoading, setcreatePostLoading] = useState(false);
+
+  // ✅ function inside component
+  const generateImageFun = async () => {
     setGenerateImageLoding(true);
-    await GenerateAIImage({ prompt: post.prompt })
-      .then((res) => {
-        setPost({ ...post, photo: res?.data?.photo });
-        setGenerateImageLoding(false);
-      })
-      .catch((error) => {
-        seterror(error?.response?.data?.message || "Image generation failed");
-        setGenerateImageLoding(false);
-      });
+    try {
+      const res = await GenerateAIImage({ prompt: post.prompt });
+      setPost((prev) => ({ ...prev, photo: res?.data?.photo }));
+    } catch (err) {
+      seterror(err?.response?.data?.message || "Image generation failed");
+    } finally {
+      setGenerateImageLoding(false);
+    }
   };
-const createPostFun = async () => {
+
+  const createPostFun = async () => {
     setcreatePostLoading(true);
-    await CreatePost(post)
-      .then(() => {
-        setcreatePostLoading(false);
-        navigate("/");
-      })
-      .catch((error) => {
-        seterror(error?.response?.data?.message || "Post creation failed");
-        setcreatePostLoading(false);
-      });
+    try {
+      await CreatePost(post);
+      navigate("/");
+    } catch (err) {
+      seterror(err?.response?.data?.message || "Post creation failed");
+    } finally {
+      setcreatePostLoading(false);
+    }
   };
 
   return (
