@@ -43,27 +43,23 @@ const Actions = styled.div`
   gap: 8px;
 `;
 
-const GenerateImageForm = ({
-  post,
-  setPost,
-  createPostLoading,
-  setGenerateImageLoading,
-  generateImageLoading,
-  setCreatePostLoading,
-}) => {
+const GenerateImageForm = () => {
   const navigate = useNavigate();
+  const [post, setPost] = useState({ name: "", prompt: "", photo: "" });
   const [error, setError] = useState("");
+  const [generateImageLoading, setGenerateImageLoading] = useState(false);
+  const [createPostLoading, setCreatePostLoading] = useState(false);
 
   const generateImageFun = async () => {
     setGenerateImageLoading(true);
     try {
       const res = await GenerateAIImage({ prompt: post.prompt });
-      setPost({
-        ...post,
-        photo: res?.data?.photo, // ✅ already has base64 prefix
-      });
-    } catch (error) {
-      setError(error?.response?.data?.message || "Image generation failed");
+      setPost((prev) => ({
+        ...prev,
+        photo: `data:image/png;base64,${res?.data?.photo}`,
+      }));
+    } catch (err) {
+      setError(err?.response?.data?.message || "Image generation failed");
     } finally {
       setGenerateImageLoading(false);
     }
@@ -74,8 +70,8 @@ const GenerateImageForm = ({
     try {
       await CreatePost(post);
       navigate("/");
-    } catch (error) {
-      setError(error?.response?.data?.message || "Post creation failed");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Post creation failed");
     } finally {
       setCreatePostLoading(false);
     }
@@ -93,21 +89,20 @@ const GenerateImageForm = ({
           placeholder="Enter your name.."
           name="name"
           value={post.name}
-          handelChange={(e) => setPost({ ...post, name: e.target.value })}
+          onChange={(e) => setPost({ ...post, name: e.target.value })}
         />
         <TextInput
           label="Image Prompt"
-          placeholder="Write a detailed prompt about the image . . . "
+          placeholder="Write a detailed prompt about the image..."
           name="prompt"
           rows="8"
           textArea
           value={post.prompt}
-          handelChange={(e) => setPost({ ...post, prompt: e.target.value })}
+          onChange={(e) => setPost({ ...post, prompt: e.target.value })}
         />
         {error && <div style={{ color: "red" }}>{error}</div>}
-        ** You can post the AI Generated Image to the Community **
+        <span>You can post the AI Generated Image to the Community</span>
 
-        {/* ✅ Preview */}
         {post.photo && (
           <div style={{ marginTop: "20px" }}>
             <h4>Preview:</h4>
