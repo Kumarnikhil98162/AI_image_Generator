@@ -1,123 +1,74 @@
-// client/components/GenerateImageForm.jsx
-import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
-import styled from 'styled-components';
-import Button from './button';
-import TextInput from './TextInput';
-import { AutoAwesome, CreateRounded } from '@mui/icons-material';
-import { CreatePost, GenerateAIImage } from '../api';
+// src/components/GenerateImageForm.jsx
+import React, { useState } from "react";
+import { GenerateAIImage } from "../api"; // your API helper
 
-const Form = styled.div`
-  flex: 1;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 9%;
-  justify-content: center;
-`;
+function GenerateImageForm() {
+  const [post, setPost] = useState({ prompt: "", photo: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-const Top = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const Title = styled.div`
-  font-size: 28px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text_primary};
-`;
-
-const Desc = styled.div`
-  font-size: 17px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_secondary};
-`;
-
-const Body = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  font-size: 12px;
-  font-weight: 400;
-  color: ${({ theme }) => theme.text_secondary};
-`;
-
-const Actions = styled.div`
-  flex: 1;
-  display: flex;
-  gap: 8px;
-`;
-
-const generateImageFun = async () => {
-    setGenerateImageLoding(true);
-    await GenerateAIImage({ prompt: post.prompt })
-      .then((res) => {
-        setPost({ ...post, photo: res?.data?.photo });
-        setGenerateImageLoding(false);
-      })
-      .catch((error) => {
-        seterror(error?.response?.data?.message || "Image generation failed");
-        setGenerateImageLoding(false);
-      });
+  const handleChange = (e) => {
+    setPost({ ...post, [e.target.name]: e.target.value });
   };
-const createPostFun = async () => {
-    setcreatePostLoading(true);
-    await CreatePost(post)
-      .then(() => {
-        setcreatePostLoading(false);
-        navigate("/");
-      })
-      .catch((error) => {
-        seterror(error?.response?.data?.message || "Post creation failed");
-        setcreatePostLoading(false);
-      });
+
+  const handleGenerate = async () => {
+    if (!post.prompt) {
+      setError("Please enter a prompt first");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      const res = await GenerateAIImage({ prompt: post.prompt });
+      setPost((prev) => ({ ...prev, photo: res?.data?.photo || "" }));
+    } catch (err) {
+      setError(err?.response?.data?.message || "Image generation failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Form>
-      <Top>
-        <Title>Generate Image with AI</Title>
-        <Desc>Write your prompt according to the image you want to generate!</Desc>
-      </Top>
-      <Body>
-        <TextInput
-          label="Author"
-          placeholder="Enter your name . ."
-          name="name"
-          value={post.name}
-          onChange={(e) => setPost({ ...post, name: e.target.value })}
-        />
-        <TextInput
-          label="Image Prompt"
-          placeholder="Write a detailed prompt about the image . ."
-          name="prompt"
-          rows="8"
-          textArea
-          value={post.prompt}
-          onChange={(e) => setPost({ ...post, prompt: e.target.value })}
-        />
-        {error && <div style={{ color: "red" }}>{error}</div>}
-        <span>You can post the AI Generated Image for the Community</span>
-      </Body>
-      <Actions>
-        <Button
-          text="Generate Image"
-          leftIcon={<AutoAwesome />}
-          isLoading={generateImageLoading}
-          isDisabled={post.prompt === ""}
-          onClick={generateImageFun}
-        />
-        <Button
-          text="Post Image"
-          leftIcon={<CreateRounded />}
-          isLoading={createPostLoading}
-          isDisabled={post.name === "" || post.prompt === "" || post.photo === ""}
-          onClick={createPostFun}
-        />
-      </Actions>
-    </Form>
+    <div className="w-full max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
+      <h2 className="text-xl font-semibold mb-4 text-center">
+        AI Image Generator
+      </h2>
+
+      {/* Prompt Input */}
+      <textarea
+        name="prompt"
+        value={post.prompt}
+        onChange={handleChange}
+        placeholder="Enter your prompt..."
+        className="w-full p-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+        rows="4"
+      />
+
+      {/* Error Message */}
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+
+      {/* Generate Button */}
+      <button
+        onClick={handleGenerate}
+        disabled={loading}
+        className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+      >
+        {loading ? "Generating..." : "Generate Image"}
+      </button>
+
+      {/* Image Preview */}
+      {post.photo && (
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-2">Preview:</h3>
+          <img
+            src={post.photo}
+            alt="Generated"
+            className="w-full rounded-lg border"
+          />
+        </div>
+      )}
+    </div>
   );
-};
+}
 
 export default GenerateImageForm;
