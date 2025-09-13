@@ -58,12 +58,19 @@ const GenerateImageForm = () => {
   const [generateImageLoading, setGenerateImageLoding] = useState(false);
   const [createPostLoading, setcreatePostLoading] = useState(false);
 
-  // ✅ function inside component
+  // ✅ function to generate image
   const generateImageFun = async () => {
     setGenerateImageLoding(true);
     try {
       const res = await GenerateAIImage({ prompt: post.prompt });
-      setPost((prev) => ({ ...prev, photo: res?.data?.photo }));
+      const photo = res?.data?.photo;
+      console.log("generated photo:", photo);
+
+      if (photo) {
+        setPost((prev) => ({ ...prev, photo }));
+      } else {
+        seterror("No image returned from server");
+      }
     } catch (err) {
       seterror(err?.response?.data?.message || "Image generation failed");
     } finally {
@@ -71,6 +78,7 @@ const GenerateImageForm = () => {
     }
   };
 
+  // ✅ function to create post
   const createPostFun = async () => {
     setcreatePostLoading(true);
     try {
@@ -89,6 +97,7 @@ const GenerateImageForm = () => {
         <Title>Generate Image with AI</Title>
         <Desc>Write your prompt according to the image you want to generate!</Desc>
       </Top>
+
       <Body>
         <TextInput
           label="Author"
@@ -106,9 +115,51 @@ const GenerateImageForm = () => {
           value={post.prompt}
           onChange={(e) => setPost({ ...post, prompt: e.target.value })}
         />
+
+        {/* ✅ Image Preview */}
+        {post.photo ? (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+            <img
+              src={
+                post.photo.startsWith("data:")
+                  ? post.photo
+                  : post.photo.startsWith("http")
+                  ? post.photo
+                  : `data:image/jpeg;base64,${post.photo}`
+              }
+              alt="AI generated"
+              style={{
+                width: "100%",
+                maxWidth: 640,
+                maxHeight: 480,
+                objectFit: "contain",
+                borderRadius: 8,
+                border: "1px solid #eee",
+              }}
+            />
+          </div>
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: 160,
+              border: "1px dashed #ccc",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#999",
+              marginTop: 8,
+              borderRadius: 6,
+            }}
+          >
+            Image preview will appear here
+          </div>
+        )}
+
         {error && <div style={{ color: "red" }}>{error}</div>}
         <span>You can post the AI Generated Image for the Community</span>
       </Body>
+
       <Actions>
         <Button
           text="Generate Image"
