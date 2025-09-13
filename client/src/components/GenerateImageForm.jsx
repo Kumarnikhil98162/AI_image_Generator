@@ -53,40 +53,39 @@ const GenerateImageForm = ({
 }) => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
+
   const generateImageFun = async () => {
     setGenerateImageLoading(true);
-    await GenerateAIImage({ prompt: post.prompt })
-      .then((res) => {
-        setPost({
-          ...post,
-          photo: `data:image/jpge;base64,${res?.data?.photo}`,
-        });
-        setGenerateImageLoading(false);
-      })
-      .catch((error) => {
-        setError(error?.response?.data?.message);
-        setGenerateImageLoading(false);
+    try {
+      const res = await GenerateAIImage({ prompt: post.prompt });
+      setPost({
+        ...post,
+        photo: res?.data?.photo, // ✅ already has base64 prefix
       });
+    } catch (error) {
+      setError(error?.response?.data?.message || "Image generation failed");
+    } finally {
+      setGenerateImageLoading(false);
+    }
   };
+
   const createPostFun = async () => {
     setCreatePostLoading(true);
-    await CreatePost(post)
-      .then((res) => {
-        setCreatePostLoading(false);
-        navigate("/");
-      })
-      .catch((error) => {
-        setError(error?.response?.data?.message);
-        setCreatePostLoading(false);
-      });
+    try {
+      await CreatePost(post);
+      navigate("/");
+    } catch (error) {
+      setError(error?.response?.data?.message || "Post creation failed");
+    } finally {
+      setCreatePostLoading(false);
+    }
   };
+
   return (
     <Form>
       <Top>
         <Title>Generate Image with prompt</Title>
-        <Desc>
-          Write your prompt according to the image you want to generate!
-        </Desc>
+        <Desc>Write your prompt according to the image you want to generate!</Desc>
       </Top>
       <Body>
         <TextInput
@@ -99,7 +98,7 @@ const GenerateImageForm = ({
         <TextInput
           label="Image Prompt"
           placeholder="Write a detailed prompt about the image . . . "
-          name="name"
+          name="prompt"
           rows="8"
           textArea
           value={post.prompt}
@@ -107,6 +106,18 @@ const GenerateImageForm = ({
         />
         {error && <div style={{ color: "red" }}>{error}</div>}
         ** You can post the AI Generated Image to the Community **
+
+        {/* ✅ Preview */}
+        {post.photo && (
+          <div style={{ marginTop: "20px" }}>
+            <h4>Preview:</h4>
+            <img
+              src={post.photo}
+              alt="Generated"
+              style={{ width: "100%", borderRadius: "10px", marginTop: "10px" }}
+            />
+          </div>
+        )}
       </Body>
       <Actions>
         <Button
@@ -115,7 +126,7 @@ const GenerateImageForm = ({
           leftIcon={<AutoAwesome />}
           isLoading={generateImageLoading}
           isDisabled={post.prompt === ""}
-          onClick={() => generateImageFun()}
+          onClick={generateImageFun}
         />
         <Button
           text="Post Image"
@@ -126,7 +137,7 @@ const GenerateImageForm = ({
           isDisabled={
             post.name === "" || post.prompt === "" || post.photo === ""
           }
-          onClick={() => createPostFun()}
+          onClick={createPostFun}
         />
       </Actions>
     </Form>
