@@ -57,18 +57,15 @@ const GenerateImageForm = () => {
   const [generateImageLoading, setGenerateImageLoding] = useState(false);
   const [createPostLoading, setcreatePostLoading] = useState(false);
 
-  // ✅ Generate Image
+  // ✅ Generate image function
   const generateImageFun = async () => {
     try {
       setGenerateImageLoding(true);
-
       const res = await GenerateAIImage({ prompt: post.prompt });
-      console.log("Response from API:", res?.data);
 
       let photo = res?.data?.photo;
-
       if (photo) {
-        // Add prefix if backend only sends raw base64
+        // add prefix if backend sends raw base64
         if (!photo.startsWith("http") && !photo.startsWith("data:image")) {
           photo = `data:image/jpeg;base64,${photo}`;
         }
@@ -83,7 +80,7 @@ const GenerateImageForm = () => {
     }
   };
 
-  // ✅ Create Post
+  // ✅ Create post function
   const createPostFun = async () => {
     setcreatePostLoading(true);
     try {
