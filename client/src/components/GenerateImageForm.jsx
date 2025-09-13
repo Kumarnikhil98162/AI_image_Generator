@@ -1,11 +1,11 @@
 // client/components/GenerateImageForm.jsx
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
-import Button from "./button";
-import TextInput from "./TextInput";
-import { AutoAwesome, CreateRounded } from "@mui/icons-material";
-import { CreatePost, GenerateAIImage } from "../api";
+import styled from 'styled-components';
+import Button from './button';
+import TextInput from './TextInput';
+import { AutoAwesome, CreateRounded } from '@mui/icons-material';
+import { CreatePost, GenerateAIImage } from '../api';
 
 const Form = styled.div`
   flex: 1;
@@ -49,48 +49,29 @@ const Actions = styled.div`
   gap: 8px;
 `;
 
-const GenerateImageForm = () => {
-  const navigate = useNavigate();
-
-  const [post, setPost] = useState({ name: "", prompt: "", photo: "" });
-  const [error, seterror] = useState("");
-  const [generateImageLoading, setGenerateImageLoding] = useState(false);
-  const [createPostLoading, setcreatePostLoading] = useState(false);
-
-  // ✅ Generate image function
-  const generateImageFun = async () => {
-    try {
-      setGenerateImageLoding(true);
-      const res = await GenerateAIImage({ prompt: post.prompt });
-
-      let photo = res?.data?.photo;
-      if (photo) {
-        // add prefix if backend sends raw base64
-        if (!photo.startsWith("http") && !photo.startsWith("data:image")) {
-          photo = `data:image/jpeg;base64,${photo}`;
-        }
-        setPost(prev => ({ ...prev, photo }));
-      } else {
-        seterror("No image returned from server");
-      }
-    } catch (err) {
-      seterror(err?.response?.data?.message || "Image generation failed");
-    } finally {
-      setGenerateImageLoding(false);
-    }
+const generateImageFun = async () => {
+    setGenerateImageLoding(true);
+    await GenerateAIImage({ prompt: post.prompt })
+      .then((res) => {
+        setPost({ ...post, photo: res?.data?.photo });
+        setGenerateImageLoding(false);
+      })
+      .catch((error) => {
+        seterror(error?.response?.data?.message || "Image generation failed");
+        setGenerateImageLoding(false);
+      });
   };
-
-  // ✅ Create post function
-  const createPostFun = async () => {
+const createPostFun = async () => {
     setcreatePostLoading(true);
-    try {
-      await CreatePost(post);
-      navigate("/");
-    } catch (err) {
-      seterror(err?.response?.data?.message || "Post creation failed");
-    } finally {
-      setcreatePostLoading(false);
-    }
+    await CreatePost(post)
+      .then(() => {
+        setcreatePostLoading(false);
+        navigate("/");
+      })
+      .catch((error) => {
+        seterror(error?.response?.data?.message || "Post creation failed");
+        setcreatePostLoading(false);
+      });
   };
 
   return (
@@ -99,7 +80,6 @@ const GenerateImageForm = () => {
         <Title>Generate Image with AI</Title>
         <Desc>Write your prompt according to the image you want to generate!</Desc>
       </Top>
-
       <Body>
         <TextInput
           label="Author"
@@ -117,45 +97,9 @@ const GenerateImageForm = () => {
           value={post.prompt}
           onChange={(e) => setPost({ ...post, prompt: e.target.value })}
         />
-
-        {/* ✅ Image Preview */}
-        {post.photo ? (
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-            <img
-              src={post.photo}
-              alt="AI generated"
-              style={{
-                width: "100%",
-                maxWidth: 640,
-                maxHeight: 480,
-                objectFit: "contain",
-                borderRadius: 8,
-                border: "1px solid #eee",
-              }}
-            />
-          </div>
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: 160,
-              border: "1px dashed #ccc",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#999",
-              marginTop: 8,
-              borderRadius: 6,
-            }}
-          >
-            Image preview will appear here
-          </div>
-        )}
-
         {error && <div style={{ color: "red" }}>{error}</div>}
         <span>You can post the AI Generated Image for the Community</span>
       </Body>
-
       <Actions>
         <Button
           text="Generate Image"
