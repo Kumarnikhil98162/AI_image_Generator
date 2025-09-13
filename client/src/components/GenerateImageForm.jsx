@@ -52,22 +52,27 @@ const Actions = styled.div`
 const GenerateImageForm = () => {
   const navigate = useNavigate();
 
-  // ✅ state variables
   const [post, setPost] = useState({ name: "", prompt: "", photo: "" });
   const [error, seterror] = useState("");
   const [generateImageLoading, setGenerateImageLoding] = useState(false);
   const [createPostLoading, setcreatePostLoading] = useState(false);
 
-  // ✅ function to generate image
+  // ✅ Generate Image
   const generateImageFun = async () => {
-    setGenerateImageLoding(true);
     try {
+      setGenerateImageLoding(true);
+
       const res = await GenerateAIImage({ prompt: post.prompt });
-      const photo = res?.data?.photo;
-      console.log("generated photo:", photo);
+      console.log("Response from API:", res?.data);
+
+      let photo = res?.data?.photo;
 
       if (photo) {
-        setPost((prev) => ({ ...prev, photo }));
+        // Add prefix if backend only sends raw base64
+        if (!photo.startsWith("http") && !photo.startsWith("data:image")) {
+          photo = `data:image/jpeg;base64,${photo}`;
+        }
+        setPost(prev => ({ ...prev, photo }));
       } else {
         seterror("No image returned from server");
       }
@@ -78,7 +83,7 @@ const GenerateImageForm = () => {
     }
   };
 
-  // ✅ function to create post
+  // ✅ Create Post
   const createPostFun = async () => {
     setcreatePostLoading(true);
     try {
@@ -120,13 +125,7 @@ const GenerateImageForm = () => {
         {post.photo ? (
           <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
             <img
-              src={
-                post.photo.startsWith("data:")
-                  ? post.photo
-                  : post.photo.startsWith("http")
-                  ? post.photo
-                  : `data:image/jpeg;base64,${post.photo}`
-              }
+              src={post.photo}
               alt="AI generated"
               style={{
                 width: "100%",
